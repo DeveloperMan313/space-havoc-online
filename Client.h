@@ -35,14 +35,18 @@ public:
 
     bool isConnected() const;
 
+    int id() const;
+
+    void disconnect();
+
 private:
     sf::TcpSocket socket;
     std::deque<Server::clientInput> inputQueue;
-    std::deque<Server::msg> serverMsgQueue;
     std::deque<Client::rbState> rbStateQueue;
     sf::Packet *currentSendPacket;
     sf::Packet *currentReceivePacket;
     std::vector<RigidBody *> *rigidBodies;
     Textures *textures;
     bool clientIsConnected;
+    int clientId;
 };

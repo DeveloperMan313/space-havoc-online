@@ -10,7 +10,9 @@ public:
     int clientId;
     float velocityScalar;
     int rotationDir;
+    int ammo;
     sf::Clock LMBelapsed;
+    sf::Clock ammoClock;
 
     Player(Textures *textures);
 

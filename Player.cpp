@@ -11,13 +11,16 @@ Player::Player(Textures *textures) {
     this->velocityScalar = 200;
     this->rotationDir = 0;
     this->clientId = -1;
+    this->ammo = 0;
 }
 
 Player::Player(const Player &rb) : RigidBody(rb) {
     this->clientId = rb.clientId;
     this->velocityScalar = rb.velocityScalar;
     this->rotationDir = rb.rotationDir;
+    this->ammo = rb.ammo;
     this->LMBelapsed = rb.LMBelapsed;
+    this->ammoClock = rb.ammoClock;
 }
 
 Player::~Player() = default;

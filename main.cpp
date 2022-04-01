@@ -27,6 +27,7 @@ int main() {
         while (true) {
             Game game(isServer, ip, port);
             int renderIter = 0;
+            loopClock.restart();
             while (game.isRunning()) {
                 for (int i = 0; i < 20; i++) game.update();
                 float timeDelta = loopClock.getElapsedTime().asSeconds();

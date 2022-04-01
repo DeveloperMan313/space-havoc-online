@@ -1,14 +1,23 @@
 #include "Client.h"
 
-Client::Client(const std::string& ip, const int port, std::vector<RigidBody *> *rigidBodies,
+Client::Client(const std::string &ip, const int port, std::vector<RigidBody *> *rigidBodies,
                Textures *textures) {
     this->socket.connect(ip, port);
     this->clientIsConnected = true;
-    this->socket.setBlocking(false);
     this->currentSendPacket = new sf::Packet();
     this->currentReceivePacket = new sf::Packet();
     this->rigidBodies = rigidBodies;
     this->textures = textures;
+    this->clientId = -1;
+    this->socket.setBlocking(true);
+    sf::Packet packet;
+    sf::Socket::Status status = sf::Socket::Status::NotReady;
+    while (status != sf::Socket::Status::Done) status = this->socket.receive(packet);
+    packet >> this->clientId;
+    int rbCount;
+    packet >> rbCount;
+    for (int i = 0; i < rbCount; i++) this->receiveData();
+    this->socket.setBlocking(false);
 }
 
 Client::~Client() {
@@ -83,6 +92,10 @@ void Client::receiveData() {
                     if (rbClass == std::string("class Player")) {
                         *this->currentReceivePacket >> ((Player *) newRb)->velocityScalar;
                         *this->currentReceivePacket >> ((Player *) newRb)->rotationDir;
+                        *this->currentReceivePacket >> ((Player *) newRb)->ammo;
+                    } else if (rbClass == std::string("class PlayerWeak")) {
+                        *this->currentReceivePacket >> ((PlayerWeak *) newRb)->velocityScalar;
+                        *this->currentReceivePacket >> ((PlayerWeak *) newRb)->rotationDir;
                     }
                     for (RigidBody *rb : *this->rigidBodies) {
                         if (rb->id == updateId) {
@@ -100,6 +113,7 @@ void Client::receiveData() {
                             if (rbClass == std::string("class Player")) {
                                 ((Player *) rb)->velocityScalar = ((Player *) newRb)->velocityScalar;
                                 ((Player *) rb)->rotationDir = ((Player *) newRb)->rotationDir;
+                                ((Player *) rb)->ammo = ((Player *) newRb)->ammo;
                             } else if (rbClass == std::string("class PlayerWeak")) {
                                 ((PlayerWeak *) rb)->velocityScalar = ((PlayerWeak *) newRb)->velocityScalar;
                                 ((PlayerWeak *) rb)->rotationDir = ((PlayerWeak *) newRb)->rotationDir;
@@ -138,6 +152,7 @@ void Client::receiveData() {
                     *this->currentReceivePacket >> ((Player *) newRb)->velocityScalar;
                     *this->currentReceivePacket >> ((Player *) newRb)->rotationDir;
                     *this->currentReceivePacket >> ((Player *) newRb)->clientId;
+                    *this->currentReceivePacket >> ((Player *) newRb)->ammo;
                 } else if (rbClass == std::string("class PlayerWeak")) {
                     *this->currentReceivePacket >> ((PlayerWeak *) newRb)->velocityScalar;
                     *this->currentReceivePacket >> ((PlayerWeak *) newRb)->rotationDir;
@@ -175,4 +190,13 @@ bool Client::hasRbState() {
 
 bool Client::isConnected() const {
     return this->clientIsConnected;
+}
+
+int Client::id() const {
+    return this->clientId;
+}
+
+void Client::disconnect() {
+    this->socket.disconnect();
+    this->clientIsConnected = false;
 }

@@ -2,7 +2,7 @@
 
 #include <utility>
 
-Game::Game(bool isServer, const std::string& ip, int port) {
+Game::Game(bool isServer, const std::string &ip, int port) {
     this->isServer = isServer;
     this->nextRbId = 0;
     this->textures = new Textures;
@@ -93,6 +93,7 @@ void Game::update() {
         if (this->window->pollEvent(event)) {
             switch (event.type) {
                 case sf::Event::Closed:
+                    this->client->disconnect();
                     this->window->close();
                 case sf::Event::MouseButtonPressed:
                     input.isMouse = true;
@@ -155,6 +156,21 @@ void Game::render() {
             circle.setOutlineThickness(1);
             circle.setOutlineColor(sf::Color::White);
             this->window->draw(circle);
+            this->window->draw(rb->sprite);
+            sf::Sprite ammoSprite;
+            ammoSprite.setTexture(*this->textures->projectile);
+            ammoSprite.setTextureRect(sf::IntRect(0, 0, 4, 4));
+            ammoSprite.setScale(sf::Vector2f(3, 3));
+            ammoSprite.setOrigin(sf::Vector2f(1, 1.5));
+            if (typeid(*rb).name() == std::string("class Player") &&
+                ((Player *) rb)->clientId == this->client->id()) {
+                for (int i = 0; i < ((Player *) rb)->ammo; i++) {
+                    ammoSprite.setPosition(
+                            rb->position +
+                            Math::rotateVector({40, 0}, -(float) M_PI * ((float) 7 / 12 + (float) i / 6)));
+                    this->window->draw(ammoSprite);
+                }
+            }
         }
         if (rb->type == RigidBody::rbType::rectangle) {
             RigidBody::hitboxInfo hitbox = rb->hitbox;
@@ -165,8 +181,8 @@ void Game::render() {
             rectangle.setOutlineThickness(1);
             rectangle.setOutlineColor(sf::Color::White);
             this->window->draw(rectangle);
+            this->window->draw(rb->sprite);
         }
-        this->window->draw(rb->sprite);
     }
     this->window->display();
 }
@@ -208,6 +224,16 @@ void Game::deleteRigidBody(int id) {
         msg.rbId = id;
         this->server->pushRbMsg(msg);
     }
+    if (!this->isServer) {
+        RigidBody *rb = rigidBodies[idx];
+        if ((typeid(*rb).name() == std::string("class Player") &&
+             (*(Player *) rb).clientId == this->client->id()) ||
+            (typeid(*rb).name() == std::string("class PlayerWeak") &&
+             (*(PlayerWeak *) rb).clientId == this->client->id())) {
+            this->client->disconnect();
+            this->window->close();
+        }
+    }
     delete this->rigidBodies[idx];
     this->rigidBodies.erase(this->rigidBodies.begin() + idx);
 }
@@ -216,6 +242,11 @@ void Game::physicsUpdate(float timeDelta) {
     for (int i = 0; i < this->rigidBodies.size(); i++) {
         if (rigidBodies[i]->type == RigidBody::rbType::rectangle) continue;
         RigidBody *rb1 = this->rigidBodies[i];
+        if (this->isServer && typeid(*rb1).name() == std::string("class Player") && ((Player *) rb1)->ammo < 3 &&
+            ((Player *) rb1)->ammoClock.getElapsedTime().asSeconds() > 1.f) {
+            ((Player *) rb1)->ammo++;
+            ((Player *) rb1)->ammoClock.restart();
+        }
         for (int j = 0; j < this->rigidBodies.size(); j++) {
             if (j == i) continue;
             RigidBody *rb2 = this->rigidBodies[j];
@@ -262,12 +293,17 @@ void Game::processClientInput(Server::clientInput input) {
                     player->rotationDir = this->rotationDir;
                     break;
                 case sf::Mouse::Right:
-                    projectile = new Projectile(this->textures);
-                    projectile->position = player->position + Math::rotateVector(sf::Vector2f(30, 0), player->rotation);
-                    projectile->rotation = player->rotation;
-                    projectile->velocity = Math::rotateVector(sf::Vector2f(1000, 0), player->rotation);
-                    projectile->clientId = player->clientId;
-                    this->addRigidBody(projectile);
+                    if (player->ammo > 0) {
+                        player->ammo--;
+                        player->ammoClock.restart();
+                        projectile = new Projectile(this->textures);
+                        projectile->position =
+                                player->position + Math::rotateVector(sf::Vector2f(30, 0), player->rotation);
+                        projectile->rotation = player->rotation;
+                        projectile->velocity = Math::rotateVector(sf::Vector2f(1000, 0), player->rotation);
+                        projectile->clientId = player->clientId;
+                        this->addRigidBody(projectile);
+                    }
                     break;
                 default:
                     break;

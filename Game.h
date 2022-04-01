@@ -1,4 +1,5 @@
 #pragma once
+#define _USE_MATH_DEFINES
 
 #include <SFML/Graphics.hpp>
 #include <cmath>
@@ -6,6 +7,7 @@
 #include <deque>
 #include <iostream>
 #include <string>
+#include "Math.h"
 #include "RigidBody.h"
 #include "Textures.h"
 #include "Player.h"
@@ -16,7 +18,7 @@
 
 class Game {
 public:
-    Game(bool isServer, const std::string& ip, int port);
+    Game(bool isServer, const std::string &ip, int port);
 
     ~Game();
 
