@@ -11,8 +11,10 @@ public:
     float velocityScalar;
     int rotationDir;
     int ammo;
+    float spriteHue;
     sf::Clock LMBelapsed;
     sf::Clock ammoClock;
+    Textures *textures;
 
     Player(Textures *textures);
 
@@ -25,4 +27,6 @@ public:
     void jump();
 
     void processCollision(RigidBody *other);
+
+    void setHue(float hue);
 };

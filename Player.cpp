@@ -12,6 +12,8 @@ Player::Player(Textures *textures) {
     this->rotationDir = 0;
     this->clientId = -1;
     this->ammo = 0;
+    this->spriteHue = 0;
+    this->textures = textures;
 }
 
 Player::Player(const Player &rb) : RigidBody(rb) {
@@ -21,9 +23,13 @@ Player::Player(const Player &rb) : RigidBody(rb) {
     this->ammo = rb.ammo;
     this->LMBelapsed = rb.LMBelapsed;
     this->ammoClock = rb.ammoClock;
+    this->spriteHue = rb.spriteHue;
+    this->textures = rb.textures;
 }
 
-Player::~Player() = default;
+Player::~Player() {
+    this->textures->customPlayerTextures.erase(this->clientId);
+}
 
 void Player::physicsStep(float timeDelta) {
     this->rotation = this->rotation + 5.4f * (float) this->rotationDir * timeDelta;
@@ -42,4 +48,24 @@ void Player::processCollision(RigidBody *other) {
         this->deleted = true;
         other->deleted = true;
     }
+}
+
+void Player::setHue(float hue) {
+    this->textures->customPlayerTextures.erase(this->clientId);
+    sf::Image image = this->textures->player->copyToImage();
+    for (int y = 0; y < image.getSize().y; y++) {
+        for (int x = 0; x < image.getSize().x; x++) {
+            std::tuple<float, float, float> hsl = Math::RGBtoHSL(image.getPixel(x, y));
+            std::get<0>(hsl) = (float) hue;
+            std::get<1>(hsl) = 0.7f;
+            sf::Color newColor = Math::HSLtoRGB(std::get<0>(hsl), std::get<1>(hsl), std::get<2>(hsl));
+            newColor.a = image.getPixel(x, y).a;
+            image.setPixel(x, y, newColor);
+        }
+    }
+    auto *newTexture = new sf::Texture;
+    newTexture->loadFromImage(image);
+    this->sprite.setTexture(*newTexture);
+    this->textures->customPlayerTextures.insert({ this->clientId, newTexture });
+    this->spriteHue = hue;
 }

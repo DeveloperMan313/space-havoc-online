@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <string.h>
+#include <unordered_map>
 
 class Textures {
 public:
@@ -10,6 +11,8 @@ public:
     sf::Texture *player;
     sf::Texture *playerWeak;
     sf::Texture *projectile;
+
+    std::unordered_map<int, sf::Texture *> customPlayerTextures;
 
     Textures();
 

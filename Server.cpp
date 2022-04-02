@@ -59,6 +59,7 @@ void Server::connectClient() {
                 packet << ((Player *) rb)->rotationDir;
                 packet << ((Player *) rb)->clientId;
                 packet << ((Player *) rb)->ammo;
+                packet << ((Player *) rb)->spriteHue;
             }
             sf::Socket::Status status;
             while (true) {
@@ -137,6 +138,7 @@ void Server::sendRbData() {
                         packet << ((Player *) rb)->velocityScalar;
                         packet << ((Player *) rb)->rotationDir;
                         packet << ((Player *) rb)->ammo;
+                        packet << ((Player *) rb)->spriteHue;
                     } else if (rbClass == std::string("class PlayerWeak")) {
                         packet << ((PlayerWeak *) rb)->velocityScalar;
                         packet << ((PlayerWeak *) rb)->rotationDir;
@@ -164,6 +166,7 @@ void Server::sendRbData() {
                     packet << ((Player *) newRb)->rotationDir;
                     packet << ((Player *) newRb)->clientId;
                     packet << ((Player *) newRb)->ammo;
+                    packet << ((Player *) newRb)->spriteHue;
                 } else if (rbClass == std::string("class PlayerWeak")) {
                     packet << ((PlayerWeak *) newRb)->velocityScalar;
                     packet << ((PlayerWeak *) newRb)->rotationDir;

@@ -93,6 +93,7 @@ void Client::receiveData() {
                         *this->currentReceivePacket >> ((Player *) newRb)->velocityScalar;
                         *this->currentReceivePacket >> ((Player *) newRb)->rotationDir;
                         *this->currentReceivePacket >> ((Player *) newRb)->ammo;
+                        *this->currentReceivePacket >> ((Player *) newRb)->spriteHue;
                     } else if (rbClass == std::string("class PlayerWeak")) {
                         *this->currentReceivePacket >> ((PlayerWeak *) newRb)->velocityScalar;
                         *this->currentReceivePacket >> ((PlayerWeak *) newRb)->rotationDir;
@@ -114,6 +115,7 @@ void Client::receiveData() {
                                 ((Player *) rb)->velocityScalar = ((Player *) newRb)->velocityScalar;
                                 ((Player *) rb)->rotationDir = ((Player *) newRb)->rotationDir;
                                 ((Player *) rb)->ammo = ((Player *) newRb)->ammo;
+                                ((Player *) rb)->spriteHue = ((Player *) newRb)->spriteHue;
                             } else if (rbClass == std::string("class PlayerWeak")) {
                                 ((PlayerWeak *) rb)->velocityScalar = ((PlayerWeak *) newRb)->velocityScalar;
                                 ((PlayerWeak *) rb)->rotationDir = ((PlayerWeak *) newRb)->rotationDir;
@@ -153,6 +155,7 @@ void Client::receiveData() {
                     *this->currentReceivePacket >> ((Player *) newRb)->rotationDir;
                     *this->currentReceivePacket >> ((Player *) newRb)->clientId;
                     *this->currentReceivePacket >> ((Player *) newRb)->ammo;
+                    *this->currentReceivePacket >> ((Player *) newRb)->spriteHue;
                 } else if (rbClass == std::string("class PlayerWeak")) {
                     *this->currentReceivePacket >> ((PlayerWeak *) newRb)->velocityScalar;
                     *this->currentReceivePacket >> ((PlayerWeak *) newRb)->rotationDir;

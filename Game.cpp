@@ -56,8 +56,9 @@ void Game::update() {
             Server::clientConnection connection = this->server->pullConnection();
             if (connection.connected) {
                 auto *player = new Player(this->textures);
-                player->position = sf::Vector2f(300, 400);
+                player->position = sf::Vector2f(Math::randInt(100, 1180), Math::randInt(100, 620));
                 player->clientId = connection.clientId;
+                player->setHue((float) Math::randInt(0, 360));
                 this->addRigidBody(player);
             } else if (connection.disconnected) {
                 for (auto rb : this->rigidBodies) {
@@ -134,6 +135,9 @@ void Game::update() {
             if (this->client->hasRbState()) {
                 Client::rbState state = this->client->pullRbState();
                 if (state.added) {
+                    if (typeid(*state.rb).name() == std::string("class Player")) {
+                        ((Player *) state.rb)->setHue(((Player *) state.rb)->spriteHue);
+                    }
                     this->addRigidBody(state.rb);
                 } else if (state.deleted) {
                     this->deleteRigidBody(state.rbId);
@@ -148,14 +152,14 @@ void Game::render() {
     this->window->clear(sf::Color::Black);
     for (RigidBody *rb : this->rigidBodies) {
         if (rb->type == RigidBody::rbType::circle) {
-            RigidBody::hitboxInfo hitbox = rb->hitbox;
+            /*RigidBody::hitboxInfo hitbox = rb->hitbox;
             sf::CircleShape circle(hitbox.radius);
             circle.setOrigin(sf::Vector2f(hitbox.radius, hitbox.radius));
             circle.setPosition(rb->position);
             circle.setFillColor(sf::Color::Black);
             circle.setOutlineThickness(1);
             circle.setOutlineColor(sf::Color::White);
-            this->window->draw(circle);
+            this->window->draw(circle);*/
             this->window->draw(rb->sprite);
             sf::Sprite ammoSprite;
             ammoSprite.setTexture(*this->textures->projectile);
@@ -177,9 +181,9 @@ void Game::render() {
             sf::RectangleShape rectangle(sf::Vector2f(hitbox.width, hitbox.height));
             rectangle.setOrigin(sf::Vector2f(hitbox.width * 0.5, hitbox.height * 0.5));
             rectangle.setPosition(rb->position);
-            rectangle.setFillColor(sf::Color::Black);
+            rectangle.setFillColor(sf::Color(100, 100, 100));
             rectangle.setOutlineThickness(1);
-            rectangle.setOutlineColor(sf::Color::White);
+            rectangle.setOutlineColor(sf::Color(100, 100, 100));
             this->window->draw(rectangle);
             this->window->draw(rb->sprite);
         }
@@ -288,7 +292,13 @@ void Game::processClientInput(Server::clientInput input) {
             Projectile *projectile;
             switch (input.mb) {
                 case sf::Mouse::Left:
-                    if (player->LMBelapsed.getElapsedTime().asMilliseconds() < 300) player->jump();
+                    if (player->LMBelapsed.getElapsedTime().asMilliseconds() < 300) {
+                        player->jump();
+                        if (player->ammo > 0) {
+                            player->ammo--;
+                            player->ammoClock.restart();
+                        }
+                    }
                     player->LMBelapsed.restart();
                     player->rotationDir = this->rotationDir;
                     break;
