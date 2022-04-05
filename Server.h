@@ -7,6 +7,7 @@
 #include "Player.h"
 #include "PlayerWeak.h"
 #include "Projectile.h"
+#include "Powerup.h"
 
 class Server {
 public:
@@ -62,6 +63,8 @@ public:
     bool hasClientInput();
 
     bool hasClientConnection();
+
+    void appendRbToPacket(sf::Packet &packet, RigidBody *rb);
 
 private:
     sf::TcpListener listener;

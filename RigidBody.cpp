@@ -7,9 +7,6 @@ RigidBody::RigidBody() {
     this->mass = 1.f;
     this->elasticity = 1.f;
     this->hitbox = {20.f, 0.f, 0.f};
-    this->resultantForce = {0, 0};
-    this->deleted = false;
-    this->id = -1;
 }
 
 RigidBody::RigidBody(enum rbType type, sf::Vector2f position, float rotation, float mass, float elasticity,
@@ -22,9 +19,6 @@ RigidBody::RigidBody(enum rbType type, sf::Vector2f position, float rotation, fl
     this->hitbox.radius = radius;
     this->hitbox.width = width;
     this->hitbox.height = height;
-    this->resultantForce = {0, 0};
-    this->deleted = false;
-    this->id = -1;
 
     if (this->type == RigidBody::rbType::rectangle) this->mass = INFINITY;
 }

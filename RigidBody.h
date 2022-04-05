@@ -29,12 +29,12 @@ public:
     float mass;
     float elasticity;
     float rotation;
-    sf::Vector2f resultantForce;
+    sf::Vector2f resultantForce = { 0, 0 };
     RigidBody::rbType type;
     RigidBody::hitboxInfo hitbox{};
     sf::Sprite sprite;
-    bool deleted;
-    int id;
+    bool deleted = false;
+    int id = -1;
 
     RigidBody();
 

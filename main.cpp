@@ -11,8 +11,9 @@ int main() {
         std::cin >> port;
         Game game(isServer, ip, port);
         sf::Clock loopClock;
+        sf::sleep(sf::milliseconds(10));
+        std::srand((unsigned int) loopClock.getElapsedTime().asMicroseconds());
         while (true) {
-            std::srand((unsigned int) loopClock.getElapsedTime().asMicroseconds());
             for (int i = 0; i < 20; i++) game.update();
             float timeDelta = loopClock.getElapsedTime().asSeconds();
             if (timeDelta < stepDuration) {
@@ -23,7 +24,7 @@ int main() {
             game.physicsUpdate(timeDelta);
         }
     }
-    if (!isServer){
+    if (!isServer) {
         std::cin >> ip >> port;
         sf::Clock loopClock;
         while (true) {

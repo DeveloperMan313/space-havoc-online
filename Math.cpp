@@ -145,8 +145,8 @@ sf::Vector2f Math::rotateVector(sf::Vector2f v, float angle) {
     return {x * cos - y * sin, x * sin + y * cos};
 }
 
-int Math::randInt(const int from, const int to) {
-    return from + (std::rand() % (to - from + 1)); // NOLINT(cert-msc30-c, cert-msc50-cpp)
+int Math::randInt(const int min, const int max) {
+    return min + rand() / (RAND_MAX / (max - min + 1) + 1); // NOLINT(cert-msc30-c, cert-msc50-cpp)
 }
 
 // HSL/HSV

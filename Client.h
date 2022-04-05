@@ -8,6 +8,7 @@
 #include "PlayerWeak.h"
 #include "Projectile.h"
 #include "Server.h"
+#include "Powerup.h"
 
 class Client {
 public:

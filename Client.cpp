@@ -10,12 +10,11 @@ Client::Client(const std::string &ip, const int port, std::vector<RigidBody *> *
     this->textures = textures;
     this->clientId = -1;
     this->socket.setBlocking(true);
-    sf::Packet packet;
-    sf::Socket::Status status = sf::Socket::Status::NotReady;
-    while (status != sf::Socket::Status::Done) status = this->socket.receive(packet);
-    packet >> this->clientId;
+    sf::Packet initPacket;
+    this->socket.receive(initPacket);
+    initPacket >> this->clientId;
     int rbCount;
-    packet >> rbCount;
+    initPacket >> rbCount;
     for (int i = 0; i < rbCount; i++) this->receiveData();
     this->socket.setBlocking(false);
 }
@@ -56,15 +55,17 @@ void Client::receiveData() {
     if (status == sf::Socket::Done) {
         int msgType;
         int rbType;
-        int updateId;
         int rbCount;
         std::string rbClass;
         RigidBody *newRb = nullptr;
+        Client::rbState state{};
         *this->currentReceivePacket >> msgType;
-        Client::rbState state;
         switch ((Server::msgType) msgType) {
             case Server::msgType::updateRbs:
-                *this->currentReceivePacket >> rbCount;
+            case Server::msgType::addRb:
+                if ((Server::msgType) msgType == Server::msgType::updateRbs)
+                    *this->currentReceivePacket >> rbCount;
+                else rbCount = 1;
                 for (int i = 0; i < rbCount; i++) {
                     *this->currentReceivePacket >> rbClass;
                     if (rbClass == std::string("class RigidBody")) {
@@ -75,8 +76,10 @@ void Client::receiveData() {
                         newRb = new PlayerWeak(this->textures);
                     } else if (rbClass == std::string("class Projectile")) {
                         newRb = new Projectile(this->textures);
+                    } else if (rbClass == std::string("class Powerup")) {
+                        newRb = new Powerup(this->textures);
                     }
-                    *this->currentReceivePacket >> updateId;
+                    *this->currentReceivePacket >> newRb->id;
                     *this->currentReceivePacket >> newRb->position.x;
                     *this->currentReceivePacket >> newRb->position.y;
                     *this->currentReceivePacket >> newRb->velocity.x;
@@ -92,78 +95,56 @@ void Client::receiveData() {
                     if (rbClass == std::string("class Player")) {
                         *this->currentReceivePacket >> ((Player *) newRb)->velocityScalar;
                         *this->currentReceivePacket >> ((Player *) newRb)->rotationDir;
+                        *this->currentReceivePacket >> ((Player *) newRb)->clientId;
                         *this->currentReceivePacket >> ((Player *) newRb)->ammo;
                         *this->currentReceivePacket >> ((Player *) newRb)->spriteHue;
                     } else if (rbClass == std::string("class PlayerWeak")) {
                         *this->currentReceivePacket >> ((PlayerWeak *) newRb)->velocityScalar;
                         *this->currentReceivePacket >> ((PlayerWeak *) newRb)->rotationDir;
+                        *this->currentReceivePacket >> ((Player *) newRb)->clientId;
+                    } else if (rbClass == std::string("class Powerup")) {
+                        int powerupType;
+                        *this->currentReceivePacket >> powerupType;
+                        ((Powerup *) newRb)->type = (Powerup::powerupType) powerupType;
                     }
-                    for (RigidBody *rb : *this->rigidBodies) {
-                        if (rb->id == updateId) {
-                            rb->position.x = newRb->position.x;
-                            rb->position.y = newRb->position.y;
-                            rb->velocity.x = newRb->velocity.x;
-                            rb->velocity.y = newRb->velocity.y;
-                            rb->mass = newRb->mass;
-                            rb->elasticity = newRb->elasticity;
-                            rb->rotation = newRb->rotation;
-                            rb->type = newRb->type;
-                            rb->hitbox.radius = newRb->hitbox.radius;
-                            rb->hitbox.width = newRb->hitbox.width;
-                            rb->hitbox.height = newRb->hitbox.height;
-                            if (rbClass == std::string("class Player")) {
-                                ((Player *) rb)->velocityScalar = ((Player *) newRb)->velocityScalar;
-                                ((Player *) rb)->rotationDir = ((Player *) newRb)->rotationDir;
-                                ((Player *) rb)->ammo = ((Player *) newRb)->ammo;
-                                ((Player *) rb)->spriteHue = ((Player *) newRb)->spriteHue;
-                            } else if (rbClass == std::string("class PlayerWeak")) {
-                                ((PlayerWeak *) rb)->velocityScalar = ((PlayerWeak *) newRb)->velocityScalar;
-                                ((PlayerWeak *) rb)->rotationDir = ((PlayerWeak *) newRb)->rotationDir;
+                    if ((Server::msgType) msgType == Server::msgType::updateRbs) {
+                        for (RigidBody *rb : *this->rigidBodies) {
+                            if (rb->id == newRb->id) {
+                                rb->position.x = newRb->position.x;
+                                rb->position.y = newRb->position.y;
+                                rb->velocity.x = newRb->velocity.x;
+                                rb->velocity.y = newRb->velocity.y;
+                                rb->mass = newRb->mass;
+                                rb->elasticity = newRb->elasticity;
+                                rb->rotation = newRb->rotation;
+                                rb->type = newRb->type;
+                                rb->hitbox.radius = newRb->hitbox.radius;
+                                rb->hitbox.width = newRb->hitbox.width;
+                                rb->hitbox.height = newRb->hitbox.height;
+                                if (rbClass == std::string("class Player")) {
+                                    ((Player *) rb)->velocityScalar = ((Player *) newRb)->velocityScalar;
+                                    ((Player *) rb)->rotationDir = ((Player *) newRb)->rotationDir;
+                                    ((Player *) rb)->clientId = ((Player *) newRb)->clientId;
+                                    ((Player *) rb)->ammo = ((Player *) newRb)->ammo;
+                                    ((Player *) rb)->spriteHue = ((Player *) newRb)->spriteHue;
+                                } else if (rbClass == std::string("class PlayerWeak")) {
+                                    ((PlayerWeak *) rb)->velocityScalar = ((PlayerWeak *) newRb)->velocityScalar;
+                                    ((PlayerWeak *) rb)->rotationDir = ((PlayerWeak *) newRb)->rotationDir;
+                                    ((PlayerWeak *) rb)->clientId = ((PlayerWeak *) newRb)->clientId;
+                                } else if (rbClass == std::string("class Powerup")) {
+                                    ((Powerup *) rb)->type = ((Powerup *) newRb)->type;
+                                }
+                                break;
                             }
-                            break;
                         }
+                        newRb = nullptr;
                     }
-                    newRb = nullptr;
                 }
-                break;
-            case Server::msgType::addRb:
-                *this->currentReceivePacket >> rbClass;
-                if (rbClass == std::string("class RigidBody")) {
-                    newRb = new RigidBody();
-                } else if (rbClass == std::string("class Player")) {
-                    newRb = new Player(this->textures);
-                } else if (rbClass == std::string("class PlayerWeak")) {
-                    newRb = new PlayerWeak(this->textures);
-                } else if (rbClass == std::string("class Projectile")) {
-                    newRb = new Projectile(this->textures);
+                if ((Server::msgType) msgType == Server::msgType::addRb) {
+                    state.added = true;
+                    state.rb = newRb;
+                    this->rbStateQueue.push_back(state);
                 }
-                *this->currentReceivePacket >> newRb->id;
-                *this->currentReceivePacket >> newRb->position.x;
-                *this->currentReceivePacket >> newRb->position.y;
-                *this->currentReceivePacket >> newRb->velocity.x;
-                *this->currentReceivePacket >> newRb->velocity.y;
-                *this->currentReceivePacket >> newRb->mass;
-                *this->currentReceivePacket >> newRb->elasticity;
-                *this->currentReceivePacket >> newRb->rotation;
-                *this->currentReceivePacket >> rbType;
-                newRb->type = (RigidBody::rbType) rbType;
-                *this->currentReceivePacket >> newRb->hitbox.radius;
-                *this->currentReceivePacket >> newRb->hitbox.width;
-                *this->currentReceivePacket >> newRb->hitbox.height;
-                if (rbClass == std::string("class Player")) {
-                    *this->currentReceivePacket >> ((Player *) newRb)->velocityScalar;
-                    *this->currentReceivePacket >> ((Player *) newRb)->rotationDir;
-                    *this->currentReceivePacket >> ((Player *) newRb)->clientId;
-                    *this->currentReceivePacket >> ((Player *) newRb)->ammo;
-                    *this->currentReceivePacket >> ((Player *) newRb)->spriteHue;
-                } else if (rbClass == std::string("class PlayerWeak")) {
-                    *this->currentReceivePacket >> ((PlayerWeak *) newRb)->velocityScalar;
-                    *this->currentReceivePacket >> ((PlayerWeak *) newRb)->rotationDir;
-                    *this->currentReceivePacket >> ((PlayerWeak *) newRb)->clientId;
-                }
-                state.added = true;
-                state.rb = newRb;
-                this->rbStateQueue.push_back(state);
                 break;
             case Server::msgType::deleteRb:
                 state.deleted = true;

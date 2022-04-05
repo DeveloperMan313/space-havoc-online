@@ -48,7 +48,7 @@ public:
 
     static sf::Vector2f rotateVector(sf::Vector2f v, float angle);
 
-    static int randInt(const int from, const int to);
+    static int randInt(const int min, const int max);
 
     static sf::Color HSLtoRGB(float H, float S, float L);
 

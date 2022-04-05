@@ -8,10 +8,13 @@ Textures::Textures() {
     this->playerWeak->loadFromFile(this->executablePath + "resources\\textures\\player_weak.png");
     this->projectile = new sf::Texture;
     this->projectile->loadFromFile(this->executablePath + "resources\\textures\\projectile.png");
+    this->powerupReverse = new sf::Texture;
+    this->powerupReverse->loadFromFile(this->executablePath + "resources\\textures\\powerup_reverse.png");
 }
 
 Textures::~Textures() {
     delete this->player;
     delete this->playerWeak;
     delete this->projectile;
+    delete this->powerupReverse;
 }

@@ -6,6 +6,7 @@
 class Projectile : public RigidBody {
 public:
     int clientId;
+    Textures* textures;
 
     Projectile(Textures *textures);
 
@@ -13,5 +14,5 @@ public:
 
     ~Projectile();
 
-    void processCollision(RigidBody *other);
+    void processCollision(RigidBody *other) override;
 };

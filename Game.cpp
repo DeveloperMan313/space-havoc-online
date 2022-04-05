@@ -74,11 +74,27 @@ void Game::update() {
             if (rb->deleted) {
                 if (typeid(*rb).name() == std::string("class Player")) {
                     auto *player = (Player *) rb;
-                    auto *weak = new PlayerWeak(this->textures);
+                    /*auto *weak = new PlayerWeak(this->textures);
+                    weak->position = player->position;
                     weak->clientId = player->clientId;
                     weak->rotation = player->rotation;
                     weak->rotationDir = player->rotationDir;
-                    this->addRigidBody(weak);
+                    this->addRigidBody(weak);*/
+                    if (Math::randInt(0, 100) < 20) {
+                        auto *powerUp = new Powerup(this->textures);
+                        powerUp->type = Powerup::powerupType::reverse;
+                        powerUp->position = player->position;
+                        this->addRigidBody(powerUp);
+                    }
+                } else if (typeid(*rb).name() == std::string("class Powerup")) {
+                    auto *powerup = (Powerup *) rb;
+                    if (powerup->type == Powerup::powerupType::reverse) {
+                        this->rotationDir *= -1;
+                        for (RigidBody *rbToReverse : this->rigidBodies) {
+                            if (typeid(*rbToReverse).name() == std::string("class Player"))
+                                ((Player *) rbToReverse)->rotationDir *= -1;
+                        }
+                    }
                 }
                 this->deleteRigidBody(rb->id);
                 i--;
@@ -137,6 +153,8 @@ void Game::update() {
                 if (state.added) {
                     if (typeid(*state.rb).name() == std::string("class Player")) {
                         ((Player *) state.rb)->setHue(((Player *) state.rb)->spriteHue);
+                    } else if (typeid(*state.rb).name() == std::string("class Powerup")) {
+                        ((Powerup *) state.rb)->loadSprite();
                     }
                     this->addRigidBody(state.rb);
                 } else if (state.deleted) {
@@ -144,6 +162,7 @@ void Game::update() {
                 }
             }
         }
+        if (!this->client->isConnected()) this->window->close();
     }
 }
 
@@ -152,8 +171,8 @@ void Game::render() {
     this->window->clear(sf::Color::Black);
     for (RigidBody *rb : this->rigidBodies) {
         if (rb->type == RigidBody::rbType::circle) {
-            /*RigidBody::hitboxInfo hitbox = rb->hitbox;
-            sf::CircleShape circle(hitbox.radius);
+            RigidBody::hitboxInfo hitbox = rb->hitbox;
+            /*sf::CircleShape circle(hitbox.radius);
             circle.setOrigin(sf::Vector2f(hitbox.radius, hitbox.radius));
             circle.setPosition(rb->position);
             circle.setFillColor(sf::Color::Black);
@@ -208,6 +227,9 @@ void Game::addRigidBody(RigidBody *rigidBody) {
             msg.rb = new PlayerWeak(*(PlayerWeak *) rigidBody);
         if (typeid(*rigidBody).name() == std::string("class Projectile"))
             msg.rb = new Projectile(*(Projectile *) rigidBody);
+        if (typeid(*rigidBody).name() == std::string("class Powerup"))
+            msg.rb = new Powerup(*(Powerup *) rigidBody);
+        msg.rb->id = rigidBody->id;
         this->server->pushRbMsg(msg);
     }
     this->rigidBodies.push_back(rigidBody);
@@ -267,7 +289,10 @@ void Game::physicsUpdate(float timeDelta) {
                 sf::Vector2f impulse = scalar * normal;
                 rb1->velocity = rb1->velocity - 1 / rb1->mass * impulse;
                 rb2->velocity = rb2->velocity + 1 / rb2->mass * impulse;
-                if (this->isServer) rb1->processCollision(rb2);
+                if (this->isServer) {
+                    rb1->processCollision(rb2);
+                    if (rb2->type == RigidBody::rbType::circle) rb2->processCollision(rb1);
+                }
             }
         }
     }
@@ -292,13 +317,7 @@ void Game::processClientInput(Server::clientInput input) {
             Projectile *projectile;
             switch (input.mb) {
                 case sf::Mouse::Left:
-                    if (player->LMBelapsed.getElapsedTime().asMilliseconds() < 300) {
-                        player->jump();
-                        if (player->ammo > 0) {
-                            player->ammo--;
-                            player->ammoClock.restart();
-                        }
-                    }
+                    if (player->LMBelapsed.getElapsedTime().asMilliseconds() < 300) player->jump();
                     player->LMBelapsed.restart();
                     player->rotationDir = this->rotationDir;
                     break;

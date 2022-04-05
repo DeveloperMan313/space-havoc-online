@@ -15,6 +15,7 @@
 #include "Projectile.h"
 #include "Server.h"
 #include "Client.h"
+#include "Powerup.h"
 
 class Game {
 public:

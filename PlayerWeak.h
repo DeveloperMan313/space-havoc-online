@@ -12,6 +12,7 @@ public:
     int rotationDir;
     sf::Clock LMBelapsed;
     sf::Clock jumpCooldown;
+    Textures *textures;
 
     PlayerWeak(Textures *textures);
 

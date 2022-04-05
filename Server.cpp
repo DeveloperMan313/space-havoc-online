@@ -31,45 +31,16 @@ void Server::connectClient() {
         msg.clientId = this->nextClientId;
         this->nextClientId++;
         this->connectionQueue.push_back(msg);
-        sf::Packet packet;
-        packet << client.clientId;
-        packet << (int) this->rigidBodies->size();
         connectingSocket->setBlocking(true);
-        connectingSocket->send(packet);
+        sf::Packet initPacket;
+        initPacket << client.clientId;
+        initPacket << (int) this->rigidBodies->size();
+        connectingSocket->send(initPacket);
         for (RigidBody *rb : *this->rigidBodies) {
-            packet = sf::Packet();
-            std::string rbClass;
-            rbClass = std::string(typeid(*rb).name());
-            packet << (int) Server::msgType::addRb;
-            packet << rbClass;
-            packet << rb->id;
-            packet << rb->position.x;
-            packet << rb->position.y;
-            packet << rb->velocity.x;
-            packet << rb->velocity.y;
-            packet << rb->mass;
-            packet << rb->elasticity;
-            packet << rb->rotation;
-            packet << (int) rb->type;
-            packet << rb->hitbox.radius;
-            packet << rb->hitbox.width;
-            packet << rb->hitbox.height;
-            if (rbClass == std::string("class Player")) {
-                packet << ((Player *) rb)->velocityScalar;
-                packet << ((Player *) rb)->rotationDir;
-                packet << ((Player *) rb)->clientId;
-                packet << ((Player *) rb)->ammo;
-                packet << ((Player *) rb)->spriteHue;
-            }
-            sf::Socket::Status status;
-            while (true) {
-                status = connectingSocket->send(packet);
-                if (status == sf::Socket::Status::Done) break;
-                else if (status == sf::Socket::Status::Disconnected) {
-                    this->disconnectClient((int) this->clients.size() - 1);
-                    return;
-                }
-            }
+            sf::Packet rbPacket;
+            rbPacket << (int) Server::msgType::addRb;
+            this->appendRbToPacket(rbPacket, rb);
+            connectingSocket->send(rbPacket);
         }
         connectingSocket->setBlocking(false);
         std::cout << "client " << this->nextClientId - 1 << " connected\n";
@@ -113,65 +84,14 @@ void Server::sendRbData() {
         Server::msg msg = this->msgQueue.front();
         this->msgQueue.pop_front();
         sf::Packet packet;
-        std::string rbClass;
         packet << (int) msg.type;
-        RigidBody *newRb = nullptr;
         switch (msg.type) {
             case Server::msgType::updateRbs:
                 packet << (int) this->rigidBodies->size();
-                for (RigidBody *rb : *this->rigidBodies) {
-                    rbClass = std::string(typeid(*rb).name());
-                    packet << rbClass;
-                    packet << rb->id;
-                    packet << rb->position.x;
-                    packet << rb->position.y;
-                    packet << rb->velocity.x;
-                    packet << rb->velocity.y;
-                    packet << rb->mass;
-                    packet << rb->elasticity;
-                    packet << rb->rotation;
-                    packet << (int) rb->type;
-                    packet << rb->hitbox.radius;
-                    packet << rb->hitbox.width;
-                    packet << rb->hitbox.height;
-                    if (rbClass == std::string("class Player")) {
-                        packet << ((Player *) rb)->velocityScalar;
-                        packet << ((Player *) rb)->rotationDir;
-                        packet << ((Player *) rb)->ammo;
-                        packet << ((Player *) rb)->spriteHue;
-                    } else if (rbClass == std::string("class PlayerWeak")) {
-                        packet << ((PlayerWeak *) rb)->velocityScalar;
-                        packet << ((PlayerWeak *) rb)->rotationDir;
-                    }
-                }
+                for (RigidBody *rb : *this->rigidBodies) this->appendRbToPacket(packet, rb);
                 break;
             case Server::msgType::addRb:
-                newRb = msg.rb;
-                rbClass = std::string(typeid(*newRb).name());
-                packet << rbClass;
-                packet << newRb->id;
-                packet << newRb->position.x;
-                packet << newRb->position.y;
-                packet << newRb->velocity.x;
-                packet << newRb->velocity.y;
-                packet << newRb->mass;
-                packet << newRb->elasticity;
-                packet << newRb->rotation;
-                packet << (int) newRb->type;
-                packet << newRb->hitbox.radius;
-                packet << newRb->hitbox.width;
-                packet << newRb->hitbox.height;
-                if (rbClass == std::string("class Player")) {
-                    packet << ((Player *) newRb)->velocityScalar;
-                    packet << ((Player *) newRb)->rotationDir;
-                    packet << ((Player *) newRb)->clientId;
-                    packet << ((Player *) newRb)->ammo;
-                    packet << ((Player *) newRb)->spriteHue;
-                } else if (rbClass == std::string("class PlayerWeak")) {
-                    packet << ((PlayerWeak *) newRb)->velocityScalar;
-                    packet << ((PlayerWeak *) newRb)->rotationDir;
-                    packet << ((PlayerWeak *) newRb)->clientId;
-                }
+                this->appendRbToPacket(packet, msg.rb);
                 break;
             case Server::msgType::deleteRb:
                 packet << msg.rbId;
@@ -179,7 +99,6 @@ void Server::sendRbData() {
             default:
                 break;
         }
-        delete newRb;
         for (int i = 0; i < this->clients.size(); i++) this->clientPacketQueue[i].push_back(new sf::Packet(packet));
     }
     for (int i = 0; i < this->clients.size(); i++) {
@@ -245,4 +164,34 @@ bool Server::hasClientInput() {
 
 bool Server::hasClientConnection() {
     return !this->connectionQueue.empty();
+}
+
+void Server::appendRbToPacket(sf::Packet &packet, RigidBody *rb) {
+    std::string rbClass = std::string(typeid(*rb).name());
+    packet << rbClass;
+    packet << rb->id;
+    packet << rb->position.x;
+    packet << rb->position.y;
+    packet << rb->velocity.x;
+    packet << rb->velocity.y;
+    packet << rb->mass;
+    packet << rb->elasticity;
+    packet << rb->rotation;
+    packet << (int) rb->type;
+    packet << rb->hitbox.radius;
+    packet << rb->hitbox.width;
+    packet << rb->hitbox.height;
+    if (rbClass == std::string("class Player")) {
+        packet << ((Player *) rb)->velocityScalar;
+        packet << ((Player *) rb)->rotationDir;
+        packet << ((Player *) rb)->clientId;
+        packet << ((Player *) rb)->ammo;
+        packet << ((Player *) rb)->spriteHue;
+    } else if (rbClass == std::string("class PlayerWeak")) {
+        packet << ((PlayerWeak *) rb)->velocityScalar;
+        packet << ((PlayerWeak *) rb)->rotationDir;
+        packet << ((PlayerWeak *) rb)->clientId;
+    } else if (rbClass == std::string("class Powerup")) {
+        packet << (int) ((Powerup *) rb)->type;
+    }
 }

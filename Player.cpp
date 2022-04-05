@@ -1,6 +1,7 @@
 #include "Player.h"
 
 Player::Player(Textures *textures) {
+    this->type = RigidBody::rbType::circle;
     this->mass = 5;
     this->elasticity = 0.5f;
     this->hitbox.radius = 25;
@@ -16,15 +17,23 @@ Player::Player(Textures *textures) {
     this->textures = textures;
 }
 
-Player::Player(const Player &rb) : RigidBody(rb) {
-    this->clientId = rb.clientId;
+Player::Player(const Player &rb) {
+    this->type = RigidBody::rbType::circle;
+    this->mass = 5;
+    this->elasticity = 0.5f;
+    this->hitbox.radius = 25;
+    this->textures = rb.textures;
+    this->sprite.setTexture(*this->textures->player);
+    this->sprite.setTextureRect(sf::IntRect(0, 0, 16, 16));
+    this->sprite.setScale(sf::Vector2f(5, 5));
+    this->sprite.setOrigin(sf::Vector2f(7, 8));
     this->velocityScalar = rb.velocityScalar;
     this->rotationDir = rb.rotationDir;
+    this->clientId = rb.clientId;
     this->ammo = rb.ammo;
+    this->spriteHue = rb.spriteHue;
     this->LMBelapsed = rb.LMBelapsed;
     this->ammoClock = rb.ammoClock;
-    this->spriteHue = rb.spriteHue;
-    this->textures = rb.textures;
 }
 
 Player::~Player() {
@@ -39,7 +48,13 @@ void Player::physicsStep(float timeDelta) {
 }
 
 void Player::jump() {
-    if (this->velocityScalar <= 200) this->velocityScalar = 1200;
+    if (this->velocityScalar <= 200) {
+        this->velocityScalar = 1200;
+        if (this->ammo > 0) {
+            this->ammo--;
+            this->ammoClock.restart();
+        }
+    }
 }
 
 void Player::processCollision(RigidBody *other) {
@@ -66,6 +81,6 @@ void Player::setHue(float hue) {
     auto *newTexture = new sf::Texture;
     newTexture->loadFromImage(image);
     this->sprite.setTexture(*newTexture);
-    this->textures->customPlayerTextures.insert({ this->clientId, newTexture });
+    this->textures->customPlayerTextures.insert({this->clientId, newTexture});
     this->spriteHue = hue;
 }
