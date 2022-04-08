@@ -78,6 +78,8 @@ void Client::receiveData() {
                         newRb = new Projectile(this->textures);
                     } else if (rbClass == std::string("class Powerup")) {
                         newRb = new Powerup(this->textures);
+                    } else if (rbClass == std::string("class Laserbeam")) {
+                        newRb = new Laserbeam(this->textures);
                     }
                     *this->currentReceivePacket >> newRb->id;
                     *this->currentReceivePacket >> newRb->position.x;
@@ -106,6 +108,8 @@ void Client::receiveData() {
                         int powerupType;
                         *this->currentReceivePacket >> powerupType;
                         ((Powerup *) newRb)->type = (Powerup::powerupType) powerupType;
+                    } else if (rbClass == std::string("class Laserbeam")) {
+                        *this->currentReceivePacket >> ((Laserbeam *) newRb)->clientId;
                     }
                     if ((Server::msgType) msgType == Server::msgType::updateRbs) {
                         for (RigidBody *rb : *this->rigidBodies) {
@@ -133,6 +137,8 @@ void Client::receiveData() {
                                     ((PlayerWeak *) rb)->clientId = ((PlayerWeak *) newRb)->clientId;
                                 } else if (rbClass == std::string("class Powerup")) {
                                     ((Powerup *) rb)->type = ((Powerup *) newRb)->type;
+                                } else if (rbClass == std::string("class Laserbeam")) {
+                                    ((Laserbeam *) rb)->clientId = ((Laserbeam *) newRb)->clientId;
                                 }
                                 break;
                             }

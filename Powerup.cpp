@@ -1,36 +1,36 @@
 #include "Powerup.h"
 
 Powerup::Powerup(Textures *textures) {
+    RigidBody::type = RigidBody::rbType::circle;
+    this->type = Powerup::powerupType::reverse;
     this->mass = 5;
     this->elasticity = 1.f;
     this->hitbox.radius = 16;
     this->textures = textures;
-    this->consumedByClientId = -1;
 }
 
-Powerup::Powerup(const Powerup &rb) {
+Powerup::Powerup(const Powerup &rb) : RigidBody(rb) {
+    RigidBody::type = RigidBody::rbType::circle;
     this->mass = 5;
     this->elasticity = 1.f;
     this->hitbox.radius = 16;
     this->textures = rb.textures;
-    this->consumedByClientId = -1;
     this->type = rb.type;
 }
 
 Powerup::~Powerup() = default;
 
 void Powerup::processCollision(RigidBody *other) {
-    if (this->deleted) return;
-    if (typeid(*other).name() == std::string("class Player")) {
-        this->consumedByClientId = ((Player *) other)->clientId;
-        this->deleted = true;
-    }
+    //if (typeid(*other).name() == std::string("class Player")) this->deleted = true;
 }
 
 void Powerup::loadSprite() {
     switch (this->type) {
         case Powerup::powerupType::reverse:
             this->sprite.setTexture(*this->textures->powerupReverse);
+            break;
+        case Powerup::powerupType::laser:
+            this->sprite.setTexture(*this->textures->powerupLaser);
             break;
         default:
             break;

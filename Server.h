@@ -8,6 +8,7 @@
 #include "PlayerWeak.h"
 #include "Projectile.h"
 #include "Powerup.h"
+#include "Laserbeam.h"
 
 class Server {
 public:
@@ -28,21 +29,21 @@ public:
 
     struct clientInput {
         bool isKeyboard = false;
-        sf::Event::EventType keyboardEvent;
-        sf::Keyboard::Key key;
+        sf::Event::EventType keyboardEvent = sf::Event::KeyPressed;
+        sf::Keyboard::Key key = sf::Keyboard::Key::Escape;
         bool isMouse = false;
-        sf::Event::EventType mouseEvent;
-        sf::Mouse::Button mb;
-        int clientId;
+        sf::Event::EventType mouseEvent = sf::Event::MouseButtonPressed;
+        sf::Mouse::Button mb = sf::Mouse::Button::Left;
+        int clientId = -1;
     };
 
     struct clientConnection {
         bool connected = false;
         bool disconnected = false;
-        int clientId;
+        int clientId = -1;
     };
 
-    Server(const int port, std::vector<RigidBody *> *rigidBodies);
+    Server(int port, std::vector<RigidBody *> *rigidBodies);
 
     ~Server();
 
@@ -50,7 +51,7 @@ public:
 
     void disconnectClient(int i);
 
-    void pushRbMsg(const Server::msg msg);
+    void pushRbMsg(Server::msg msg);
 
     Server::clientInput pullInput();
 
@@ -64,7 +65,7 @@ public:
 
     bool hasClientConnection();
 
-    void appendRbToPacket(sf::Packet &packet, RigidBody *rb);
+    static void appendRbToPacket(sf::Packet &packet, RigidBody *rb);
 
 private:
     sf::TcpListener listener;

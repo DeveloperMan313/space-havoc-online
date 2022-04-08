@@ -1,5 +1,4 @@
 #pragma once
-#define _USE_MATH_DEFINES
 
 #include <SFML/Graphics.hpp>
 #include <cmath>
@@ -16,6 +15,7 @@
 #include "Server.h"
 #include "Client.h"
 #include "Powerup.h"
+#include "Laserbeam.h"
 
 class Game {
 public:

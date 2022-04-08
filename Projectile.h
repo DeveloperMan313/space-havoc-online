@@ -6,7 +6,7 @@
 class Projectile : public RigidBody {
 public:
     int clientId;
-    Textures* textures;
+    Textures *textures;
 
     Projectile(Textures *textures);
 

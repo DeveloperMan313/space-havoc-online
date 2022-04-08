@@ -39,7 +39,7 @@ void Server::connectClient() {
         for (RigidBody *rb : *this->rigidBodies) {
             sf::Packet rbPacket;
             rbPacket << (int) Server::msgType::addRb;
-            this->appendRbToPacket(rbPacket, rb);
+            Server::appendRbToPacket(rbPacket, rb);
             connectingSocket->send(rbPacket);
         }
         connectingSocket->setBlocking(false);
@@ -88,10 +88,10 @@ void Server::sendRbData() {
         switch (msg.type) {
             case Server::msgType::updateRbs:
                 packet << (int) this->rigidBodies->size();
-                for (RigidBody *rb : *this->rigidBodies) this->appendRbToPacket(packet, rb);
+                for (RigidBody *rb : *this->rigidBodies) Server::appendRbToPacket(packet, rb);
                 break;
             case Server::msgType::addRb:
-                this->appendRbToPacket(packet, msg.rb);
+                Server::appendRbToPacket(packet, msg.rb);
                 break;
             case Server::msgType::deleteRb:
                 packet << msg.rbId;
@@ -193,5 +193,7 @@ void Server::appendRbToPacket(sf::Packet &packet, RigidBody *rb) {
         packet << ((PlayerWeak *) rb)->clientId;
     } else if (rbClass == std::string("class Powerup")) {
         packet << (int) ((Powerup *) rb)->type;
+    } else if (rbClass == std::string("class Laserbeam")) {
+        packet << (int) ((Laserbeam *) rb)->clientId;
     }
 }

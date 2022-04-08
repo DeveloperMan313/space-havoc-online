@@ -8,9 +8,9 @@
 
 class RigidBody {
 public:
-    struct IntersectionInfo {
-        sf::Vector2f median;
-        sf::Vector2f normal;
+    struct intersectionInfo {
+        sf::Vector2f median = {INFINITY, INFINITY};
+        sf::Vector2f normal = {0, 0};
         float depth = 0;
     };
 
@@ -29,7 +29,7 @@ public:
     float mass;
     float elasticity;
     float rotation;
-    sf::Vector2f resultantForce = { 0, 0 };
+    sf::Vector2f resultantForce = {0, 0};
     RigidBody::rbType type;
     RigidBody::hitboxInfo hitbox{};
     sf::Sprite sprite;
@@ -45,7 +45,7 @@ public:
 
     ~RigidBody();
 
-    RigidBody::IntersectionInfo getIntersectionInfo(RigidBody &other) const;
+    virtual RigidBody::intersectionInfo getIntersectionInfo(RigidBody &other) const;
 
     void applyForce(sf::Vector2f force);
 

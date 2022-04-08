@@ -25,7 +25,7 @@ RigidBody::RigidBody(enum rbType type, sf::Vector2f position, float rotation, fl
 
 RigidBody::~RigidBody() = default;
 
-RigidBody::IntersectionInfo RigidBody::getIntersectionInfo(RigidBody &other) const {
+RigidBody::intersectionInfo RigidBody::getIntersectionInfo(RigidBody &other) const {
     RigidBody::hitboxInfo info1 = this->hitbox;
     RigidBody::hitboxInfo info2 = other.hitbox;
     if (this->type == RigidBody::rbType::circle && other.type == RigidBody::rbType::circle) {
@@ -36,13 +36,13 @@ RigidBody::IntersectionInfo RigidBody::getIntersectionInfo(RigidBody &other) con
         float dist = Math::vectorScale(deltaPos);
         sf::Vector2f normal = Math::normalizeVector(deltaPos);
         if (dist < r1 + r2) point = this->position + normal * (r1 - (r1 + r2 - dist) * 1.0f);
-        RigidBody::IntersectionInfo result;
+        RigidBody::intersectionInfo result;
         result.median = point;
         result.normal = normal;
         result.depth = r1 + r2 - dist;
         return result;
     } else if (this->type == RigidBody::rbType::rectangle && other.type == RigidBody::rbType::rectangle) {
-        RigidBody::IntersectionInfo result;
+        RigidBody::intersectionInfo result;
         return result;
     } else {
         float r;
@@ -63,7 +63,7 @@ RigidBody::IntersectionInfo RigidBody::getIntersectionInfo(RigidBody &other) con
             circlePos = other.position;
             rectanglePos = this->position;
         }
-        RigidBody::IntersectionInfo result;
+        RigidBody::intersectionInfo result{};
         std::vector<sf::Vector2f> rectPoints =
                 {rectanglePos + sf::Vector2f(-w / 2, -h / 2),
                  rectanglePos + sf::Vector2f(w / 2, -h / 2),
@@ -101,9 +101,7 @@ RigidBody::IntersectionInfo RigidBody::getIntersectionInfo(RigidBody &other) con
             result.depth = r - minDistPoint;
         } else {
             if (minDistEdge > 10e5) {
-                result.normal = sf::Vector2f(0, 0);
                 result.median = sf::Vector2f(INFINITY, INFINITY);
-                result.depth = INFINITY;
                 return result;
             }
             if (minDistEdge == top) {

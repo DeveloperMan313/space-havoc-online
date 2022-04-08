@@ -7,13 +7,14 @@
 
 class Powerup : public RigidBody {
 public:
-    enum class powerupType { reverse };
+    enum class powerupType {
+        reverse, laser
+    };
 
     Powerup::powerupType type;
-    Textures* textures;
-    int consumedByClientId;
+    Textures *textures;
 
-    Powerup(Textures *textures);
+    explicit Powerup(Textures *textures);
 
     Powerup(const Powerup &rb);
 

@@ -12,6 +12,8 @@ public:
     sf::Texture *playerWeak;
     sf::Texture *projectile;
     sf::Texture *powerupReverse;
+    sf::Texture *powerupLaser;
+    sf::Texture *laserbeam;
 
     std::unordered_map<int, sf::Texture *> customPlayerTextures;
 

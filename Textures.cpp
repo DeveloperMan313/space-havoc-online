@@ -10,6 +10,11 @@ Textures::Textures() {
     this->projectile->loadFromFile(this->executablePath + "resources\\textures\\projectile.png");
     this->powerupReverse = new sf::Texture;
     this->powerupReverse->loadFromFile(this->executablePath + "resources\\textures\\powerup_reverse.png");
+    this->powerupLaser = new sf::Texture;
+    this->powerupLaser->loadFromFile(this->executablePath + "resources\\textures\\powerup_laser.png");
+    this->laserbeam = new sf::Texture;
+    this->laserbeam->loadFromFile(this->executablePath + "resources\\textures\\laserbeam.png");
+    this->laserbeam->setRepeated(true);
 }
 
 Textures::~Textures() {
@@ -17,4 +22,6 @@ Textures::~Textures() {
     delete this->playerWeak;
     delete this->projectile;
     delete this->powerupReverse;
+    delete this->powerupLaser;
+    delete this->laserbeam;
 }

@@ -1,17 +1,13 @@
 #pragma once
+#define _USE_MATH_DEFINES
 
 #include <SFML/Graphics.hpp>
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <iostream>
 
 class Math {
 public:
-    struct triangle {
-        sf::Vector2f v1;
-        sf::Vector2f v2;
-        sf::Vector2f v3;
-    };
     struct line {
         float a;
         float b;
@@ -48,7 +44,7 @@ public:
 
     static sf::Vector2f rotateVector(sf::Vector2f v, float angle);
 
-    static int randInt(const int min, const int max);
+    static int randInt(int min, int max);
 
     static sf::Color HSLtoRGB(float H, float S, float L);
 

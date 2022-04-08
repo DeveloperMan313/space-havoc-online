@@ -15,9 +15,10 @@ Player::Player(Textures *textures) {
     this->ammo = 0;
     this->spriteHue = 0;
     this->textures = textures;
+    this->hasLaser = false;
 }
 
-Player::Player(const Player &rb) {
+Player::Player(const Player &rb) : RigidBody(rb) {
     this->type = RigidBody::rbType::circle;
     this->mass = 5;
     this->elasticity = 0.5f;
@@ -34,6 +35,7 @@ Player::Player(const Player &rb) {
     this->spriteHue = rb.spriteHue;
     this->LMBelapsed = rb.LMBelapsed;
     this->ammoClock = rb.ammoClock;
+    this->hasLaser = rb.hasLaser;
 }
 
 Player::~Player() {
@@ -61,6 +63,15 @@ void Player::processCollision(RigidBody *other) {
     if (typeid(*other).name() == std::string("class Projectile") &&
         ((Projectile *) other)->clientId != this->clientId) {
         this->deleted = true;
+        other->deleted = true;
+    } else if (typeid(*other).name() == std::string("class Powerup") && !other->deleted) {
+        switch (((Powerup *) other)->type) {
+            case Powerup::powerupType::laser:
+                this->hasLaser = true;
+                break;
+            default:
+                break;
+        }
         other->deleted = true;
     }
 }

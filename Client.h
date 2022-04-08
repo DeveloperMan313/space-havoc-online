@@ -9,6 +9,7 @@
 #include "Projectile.h"
 #include "Server.h"
 #include "Powerup.h"
+#include "Laserbeam.h"
 
 class Client {
 public:
@@ -19,7 +20,7 @@ public:
         int rbId = -1;
     };
 
-    Client(const std::string& ip, int port, std::vector<RigidBody *> *rigidBodies,
+    Client(const std::string &ip, int port, std::vector<RigidBody *> *rigidBodies,
            Textures *textures);
 
     ~Client();

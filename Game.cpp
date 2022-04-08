@@ -80,9 +80,11 @@ void Game::update() {
                     weak->rotation = player->rotation;
                     weak->rotationDir = player->rotationDir;
                     this->addRigidBody(weak);*/
-                    if (Math::randInt(0, 100) < 20) {
+                    if (Math::randInt(0, 100) < 50) {
+                        int randPUType = Math::randInt(0, 100);
                         auto *powerUp = new Powerup(this->textures);
-                        powerUp->type = Powerup::powerupType::reverse;
+                        if (randPUType < 50) powerUp->type = Powerup::powerupType::reverse;
+                        else if (randPUType >= 50) powerUp->type = Powerup::powerupType::laser;
                         powerUp->position = player->position;
                         this->addRigidBody(powerUp);
                     }
@@ -171,8 +173,8 @@ void Game::render() {
     this->window->clear(sf::Color::Black);
     for (RigidBody *rb : this->rigidBodies) {
         if (rb->type == RigidBody::rbType::circle) {
-            RigidBody::hitboxInfo hitbox = rb->hitbox;
-            /*sf::CircleShape circle(hitbox.radius);
+            /*RigidBody::hitboxInfo hitbox = rb->hitbox;
+            sf::CircleShape circle(hitbox.radius);
             circle.setOrigin(sf::Vector2f(hitbox.radius, hitbox.radius));
             circle.setPosition(rb->position);
             circle.setFillColor(sf::Color::Black);
@@ -229,6 +231,8 @@ void Game::addRigidBody(RigidBody *rigidBody) {
             msg.rb = new Projectile(*(Projectile *) rigidBody);
         if (typeid(*rigidBody).name() == std::string("class Powerup"))
             msg.rb = new Powerup(*(Powerup *) rigidBody);
+        if (typeid(*rigidBody).name() == std::string("class Laserbeam"))
+            msg.rb = new Laserbeam(*(Laserbeam *) rigidBody);
         msg.rb->id = rigidBody->id;
         this->server->pushRbMsg(msg);
     }
@@ -276,19 +280,21 @@ void Game::physicsUpdate(float timeDelta) {
         for (int j = 0; j < this->rigidBodies.size(); j++) {
             if (j == i) continue;
             RigidBody *rb2 = this->rigidBodies[j];
-            RigidBody::IntersectionInfo intersection = rb1->getIntersectionInfo(*rb2);
+            RigidBody::intersectionInfo intersection = rb1->getIntersectionInfo(*rb2);
             if (intersection.median.x != INFINITY) {
-                sf::Vector2f normal = intersection.normal;
-                sf::Vector2f rv = rb2->velocity - rb1->velocity;
-                float velAlongNormal = Math::dotProduct(rv, normal);
-                rb1->position = rb1->position - normal * intersection.depth * 0.8f;
-                if (velAlongNormal > 0) continue;
-                float e = std::min(rb1->elasticity, rb2->elasticity);
-                float scalar = -(1 + e) * velAlongNormal;
-                scalar /= 1 / rb1->mass + 1 / rb2->mass;
-                sf::Vector2f impulse = scalar * normal;
-                rb1->velocity = rb1->velocity - 1 / rb1->mass * impulse;
-                rb2->velocity = rb2->velocity + 1 / rb2->mass * impulse;
+                if (rb1->mass * rb2->mass != 0) {
+                    sf::Vector2f normal = intersection.normal;
+                    sf::Vector2f rv = rb2->velocity - rb1->velocity;
+                    float velAlongNormal = Math::dotProduct(rv, normal);
+                    rb1->position -= normal * intersection.depth * 0.8f;
+                    if (velAlongNormal > 0) continue;
+                    float e = std::min(rb1->elasticity, rb2->elasticity);
+                    float scalar = -(1 + e) * velAlongNormal;
+                    scalar /= 1 / rb1->mass + 1 / rb2->mass;
+                    sf::Vector2f impulse = scalar * normal;
+                    rb1->velocity = rb1->velocity - 1 / rb1->mass * impulse;
+                    rb2->velocity = rb2->velocity + 1 / rb2->mass * impulse;
+                }
                 if (this->isServer) {
                     rb1->processCollision(rb2);
                     if (rb2->type == RigidBody::rbType::circle) rb2->processCollision(rb1);
@@ -296,9 +302,14 @@ void Game::physicsUpdate(float timeDelta) {
             }
         }
     }
+
     for (auto rb : this->rigidBodies) {
         rb->physicsStep(timeDelta);
-        if (this->isServer && Math::vectorScale(rb->position - sf::Vector2f(400, 300)) > 2000) rb->deleted = true;
+        if (typeid(*rb).name() == std::string("class Laserbeam") &&
+            ((Laserbeam *) rb)->createdElapsed.getElapsedTime().asMilliseconds() > 400) {
+            rb->deleted = true;
+        }
+        if (this->isServer && Math::vectorScale(rb->position - sf::Vector2f(640, 360)) > 5000) rb->deleted = true;
     }
 }
 
@@ -315,6 +326,7 @@ void Game::processClientInput(Server::clientInput input) {
     if (input.isMouse) {
         if (input.mouseEvent == sf::Event::MouseButtonPressed) {
             Projectile *projectile;
+            Laserbeam *laserbeam;
             switch (input.mb) {
                 case sf::Mouse::Left:
                     if (player->LMBelapsed.getElapsedTime().asMilliseconds() < 300) player->jump();
@@ -322,7 +334,15 @@ void Game::processClientInput(Server::clientInput input) {
                     player->rotationDir = this->rotationDir;
                     break;
                 case sf::Mouse::Right:
-                    if (player->ammo > 0) {
+                    if (player->hasLaser) {
+                        player->hasLaser = false;
+                        laserbeam = new Laserbeam(this->textures);
+                        laserbeam->position =
+                                player->position + Math::rotateVector(sf::Vector2f(30, 0), player->rotation);
+                        laserbeam->rotation = player->rotation;
+                        laserbeam->clientId = player->clientId;
+                        this->addRigidBody(laserbeam);
+                    } else if (player->ammo > 0) {
                         player->ammo--;
                         player->ammoClock.restart();
                         projectile = new Projectile(this->textures);

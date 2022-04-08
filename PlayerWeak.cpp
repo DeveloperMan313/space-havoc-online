@@ -15,7 +15,7 @@ PlayerWeak::PlayerWeak(Textures *textures) {
     this->textures = textures;
 }
 
-PlayerWeak::PlayerWeak(const PlayerWeak &rb) {
+PlayerWeak::PlayerWeak(const PlayerWeak &rb) : RigidBody(rb) {
     this->type = RigidBody::rbType::circle;
     this->mass = 2;
     this->elasticity = 0.5f;
