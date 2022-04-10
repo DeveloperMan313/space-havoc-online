@@ -35,10 +35,7 @@ RigidBody::intersectionInfo Laserbeam::getIntersectionInfo(RigidBody &other) con
 }
 
 void Laserbeam::processCollision(RigidBody *other) {
-    if (typeid(*other).name() == std::string("class Player") && ((Player *) other)->clientId != this->clientId ||
-        typeid(*other).name() == std::string("class PlayerWeak")) {
-        other->deleted = true;
-    }
+
 }
 
 void Laserbeam::physicsStep(float timeDelta) {

@@ -15,6 +15,7 @@ PlayerWeak::PlayerWeak(Textures *textures) : RigidBody() {
     this->spriteHue = 0;
     this->textures = textures;
     this->doPUSpawn = true;
+    this->isInvincible = true;
 }
 
 PlayerWeak::PlayerWeak(const PlayerWeak &rb) : RigidBody(rb) {
@@ -32,8 +33,9 @@ PlayerWeak::PlayerWeak(const PlayerWeak &rb) : RigidBody(rb) {
     this->velocityScalar = rb.velocityScalar;
     this->rotationDir = rb.rotationDir;
     this->LMBelapsed = rb.LMBelapsed;
-    this->jumpCooldown = rb.jumpCooldown;
     this->doPUSpawn = true;
+    this->isInvincible = rb.isInvincible;
+    this->invincibilityClock = rb.invincibilityClock;
 }
 
 PlayerWeak::~PlayerWeak() {
@@ -54,8 +56,10 @@ void PlayerWeak::jump() {
 }
 
 void PlayerWeak::processCollision(RigidBody *other) {
-    if (typeid(*other).name() == std::string("class Projectile") &&
-        ((Projectile *) other)->clientId != this->clientId) {
+    if (!this->isInvincible && ((typeid(*other).name() == std::string("class Projectile") &&
+                                 ((Projectile *) other)->clientId != this->clientId) ||
+                                (typeid(*other).name() == std::string("class Laserbeam") &&
+                                 this->clientId != ((Laserbeam *) other)->clientId))) {
         this->deleted = true;
     }
 }

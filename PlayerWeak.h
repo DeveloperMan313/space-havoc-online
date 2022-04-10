@@ -4,6 +4,7 @@
 #include "RigidBody.h"
 #include "Textures.h"
 #include "Projectile.h"
+#include "Laserbeam.h"
 
 class PlayerWeak : public RigidBody {
 public:
@@ -12,8 +13,9 @@ public:
     int rotationDir;
     float spriteHue;
     bool doPUSpawn;
+    bool isInvincible;
     sf::Clock LMBelapsed;
-    sf::Clock jumpCooldown;
+    sf::Clock invincibilityClock;
     Textures *textures;
     sf::Clock createdElapsed;
 

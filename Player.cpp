@@ -16,6 +16,7 @@ Player::Player(Textures *textures) : RigidBody() {
     this->spriteHue = 0;
     this->textures = textures;
     this->hasLaser = false;
+    this->isInvincible = true;
 }
 
 Player::Player(const Player &rb) : RigidBody(rb) {
@@ -36,6 +37,8 @@ Player::Player(const Player &rb) : RigidBody(rb) {
     this->LMBelapsed = rb.LMBelapsed;
     this->ammoClock = rb.ammoClock;
     this->hasLaser = rb.hasLaser;
+    this->isInvincible = rb.isInvincible;
+    this->invincibilityClock = rb.invincibilityClock;
 }
 
 Player::~Player() {
@@ -60,11 +63,13 @@ void Player::jump() {
 }
 
 void Player::processCollision(RigidBody *other) {
-    if (typeid(*other).name() == std::string("class Projectile") &&
-        ((Projectile *) other)->clientId != this->clientId) {
+    if (!this->isInvincible && ((typeid(*other).name() == std::string("class Projectile") &&
+                                 ((Projectile *) other)->clientId != this->clientId) ||
+                                (typeid(*other).name() == std::string("class Laserbeam") &&
+                                 this->clientId != ((Laserbeam *) other)->clientId))) {
         this->deleted = true;
-        other->deleted = true;
-    } else if (typeid(*other).name() == std::string("class Powerup") && !other->deleted) {
+    }
+    if (typeid(*other).name() == std::string("class Powerup") && !other->deleted) {
         switch (((Powerup *) other)->type) {
             case Powerup::powerupType::laser:
                 this->hasLaser = true;

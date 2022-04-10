@@ -17,7 +17,6 @@ Projectile::~Projectile() = default;
 
 void Projectile::processCollision(RigidBody *other) {
     this->deleted = true;
-    if (typeid(*other).name() == std::string("class Projectile")) other->deleted = true;
 }
 
 Projectile::Projectile(const Projectile &rb) : RigidBody(rb) {

@@ -314,9 +314,14 @@ void Game::physicsUpdate(float timeDelta) {
             if (typeid(*rb).name() == std::string("class Laserbeam") &&
                 ((Laserbeam *) rb)->createdElapsed.getElapsedTime().asMilliseconds() > 400) {
                 rb->deleted = true;
-            }
-            if (typeid(*rb).name() == std::string("class PlayerWeak") &&
-                ((PlayerWeak *) rb)->createdElapsed.getElapsedTime().asSeconds() > 10) {
+            } else if (typeid(*rb).name() == std::string("class Player") && ((Player *) rb)->isInvincible &&
+                       ((Player *) rb)->invincibilityClock.getElapsedTime().asSeconds() > 1.f) {
+                ((Player *) rb)->isInvincible = false;
+            } else if (typeid(*rb).name() == std::string("class PlayerWeak") && ((PlayerWeak *) rb)->isInvincible &&
+                       ((PlayerWeak *) rb)->invincibilityClock.getElapsedTime().asSeconds() > 1.f) {
+                ((PlayerWeak *) rb)->isInvincible = false;
+            } else if (typeid(*rb).name() == std::string("class PlayerWeak") &&
+                       ((PlayerWeak *) rb)->createdElapsed.getElapsedTime().asSeconds() > 10) {
                 rb->deleted = true;
                 ((PlayerWeak *) rb)->doPUSpawn = false;
                 auto *player = new Player(this->textures);

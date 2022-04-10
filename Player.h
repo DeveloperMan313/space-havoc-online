@@ -5,6 +5,7 @@
 #include "Textures.h"
 #include "Projectile.h"
 #include "Powerup.h"
+#include "Laserbeam.h"
 
 class Player : public RigidBody {
 public:
@@ -15,8 +16,10 @@ public:
     float spriteHue;
     sf::Clock LMBelapsed;
     sf::Clock ammoClock;
+    sf::Clock invincibilityClock;
     Textures *textures;
     bool hasLaser;
+    bool isInvincible;
 
     explicit Player(Textures *textures);
 
