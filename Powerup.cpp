@@ -1,6 +1,6 @@
 #include "Powerup.h"
 
-Powerup::Powerup(Textures *textures) {
+Powerup::Powerup(Textures *textures) : RigidBody() {
     RigidBody::type = RigidBody::rbType::circle;
     this->type = Powerup::powerupType::reverse;
     this->mass = 5;
@@ -21,7 +21,7 @@ Powerup::Powerup(const Powerup &rb) : RigidBody(rb) {
 Powerup::~Powerup() = default;
 
 void Powerup::processCollision(RigidBody *other) {
-    //if (typeid(*other).name() == std::string("class Player")) this->deleted = true;
+
 }
 
 void Powerup::loadSprite() {

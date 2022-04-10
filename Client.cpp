@@ -103,7 +103,8 @@ void Client::receiveData() {
                     } else if (rbClass == std::string("class PlayerWeak")) {
                         *this->currentReceivePacket >> ((PlayerWeak *) newRb)->velocityScalar;
                         *this->currentReceivePacket >> ((PlayerWeak *) newRb)->rotationDir;
-                        *this->currentReceivePacket >> ((Player *) newRb)->clientId;
+                        *this->currentReceivePacket >> ((PlayerWeak *) newRb)->clientId;
+                        *this->currentReceivePacket >> ((PlayerWeak *) newRb)->spriteHue;
                     } else if (rbClass == std::string("class Powerup")) {
                         int powerupType;
                         *this->currentReceivePacket >> powerupType;
@@ -135,6 +136,7 @@ void Client::receiveData() {
                                     ((PlayerWeak *) rb)->velocityScalar = ((PlayerWeak *) newRb)->velocityScalar;
                                     ((PlayerWeak *) rb)->rotationDir = ((PlayerWeak *) newRb)->rotationDir;
                                     ((PlayerWeak *) rb)->clientId = ((PlayerWeak *) newRb)->clientId;
+                                    ((PlayerWeak *) rb)->spriteHue = ((PlayerWeak *) newRb)->spriteHue;
                                 } else if (rbClass == std::string("class Powerup")) {
                                     ((Powerup *) rb)->type = ((Powerup *) newRb)->type;
                                 } else if (rbClass == std::string("class Laserbeam")) {

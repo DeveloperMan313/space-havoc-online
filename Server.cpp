@@ -63,7 +63,7 @@ void Server::disconnectClient(int i) {
     this->clientPacketQueue.erase(this->clientPacketQueue.begin() + i);
 }
 
-void Server::pushRbMsg(const Server::msg msg) {
+void Server::pushMsg(const Server::msg msg) {
     if (!this->clients.empty()) this->msgQueue.push_back(msg);
 }
 
@@ -79,7 +79,7 @@ Server::clientConnection Server::pullConnection() {
     return connection;
 }
 
-void Server::sendRbData() {
+void Server::sendData() {
     if (!this->msgQueue.empty()) {
         Server::msg msg = this->msgQueue.front();
         this->msgQueue.pop_front();
@@ -191,6 +191,7 @@ void Server::appendRbToPacket(sf::Packet &packet, RigidBody *rb) {
         packet << ((PlayerWeak *) rb)->velocityScalar;
         packet << ((PlayerWeak *) rb)->rotationDir;
         packet << ((PlayerWeak *) rb)->clientId;
+        packet << ((PlayerWeak *) rb)->spriteHue;
     } else if (rbClass == std::string("class Powerup")) {
         packet << (int) ((Powerup *) rb)->type;
     } else if (rbClass == std::string("class Laserbeam")) {

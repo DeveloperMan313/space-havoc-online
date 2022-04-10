@@ -51,13 +51,13 @@ public:
 
     void disconnectClient(int i);
 
-    void pushRbMsg(Server::msg msg);
+    void pushMsg(msg msg);
 
     Server::clientInput pullInput();
 
     Server::clientConnection pullConnection();
 
-    void sendRbData();
+    void sendData();
 
     void receiveInputData();
 

@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player(Textures *textures) {
+Player::Player(Textures *textures) : RigidBody() {
     this->type = RigidBody::rbType::circle;
     this->mass = 5;
     this->elasticity = 0.5f;

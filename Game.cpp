@@ -15,7 +15,7 @@ Game::Game(bool isServer, const std::string &ip, int port) {
         this->server = nullptr;
         this->client = new Client(ip, port, &this->rigidBodies, this->textures);
         sf::VideoMode videoMode(1280, 720);
-        this->window = new sf::RenderWindow(videoMode, "AstroParty Online");
+        this->window = new sf::RenderWindow(videoMode, "Space Havoc Online");
     }
 }
 
@@ -46,12 +46,12 @@ void Game::update() {
         if (this->sendRbUpdateClock.getElapsedTime().asMilliseconds() > 200) {
             Server::msg update{};
             update.type = Server::msgType::updateRbs;
-            this->server->pushRbMsg(update);
+            this->server->pushMsg(update);
             this->sendRbUpdateClock.restart();
         }
         this->server->connectClient();
         this->server->receiveInputData();
-        this->server->sendRbData();
+        this->server->sendData();
         if (this->server->hasClientConnection()) {
             Server::clientConnection connection = this->server->pullConnection();
             if (connection.connected) {
@@ -74,20 +74,13 @@ void Game::update() {
             if (rb->deleted) {
                 if (typeid(*rb).name() == std::string("class Player")) {
                     auto *player = (Player *) rb;
-                    /*auto *weak = new PlayerWeak(this->textures);
+                    auto *weak = new PlayerWeak(this->textures);
                     weak->position = player->position;
                     weak->clientId = player->clientId;
                     weak->rotation = player->rotation;
                     weak->rotationDir = player->rotationDir;
-                    this->addRigidBody(weak);*/
-                    if (Math::randInt(0, 100) < 50) {
-                        int randPUType = Math::randInt(0, 100);
-                        auto *powerUp = new Powerup(this->textures);
-                        if (randPUType < 50) powerUp->type = Powerup::powerupType::reverse;
-                        else if (randPUType >= 50) powerUp->type = Powerup::powerupType::laser;
-                        powerUp->position = player->position;
-                        this->addRigidBody(powerUp);
-                    }
+                    weak->setHue(player->spriteHue);
+                    this->addRigidBody(weak);
                 } else if (typeid(*rb).name() == std::string("class Powerup")) {
                     auto *powerup = (Powerup *) rb;
                     if (powerup->type == Powerup::powerupType::reverse) {
@@ -96,6 +89,16 @@ void Game::update() {
                             if (typeid(*rbToReverse).name() == std::string("class Player"))
                                 ((Player *) rbToReverse)->rotationDir *= -1;
                         }
+                    }
+                } else if (typeid(*rb).name() == std::string("class PlayerWeak") && ((PlayerWeak *) rb)->doPUSpawn) {
+                    auto *weak = (PlayerWeak *) rb;
+                    if (Math::randInt(0, 100) < 50) {
+                        int randPUType = Math::randInt(0, 100);
+                        auto *powerUp = new Powerup(this->textures);
+                        if (randPUType < 50) powerUp->type = Powerup::powerupType::reverse;
+                        else if (randPUType >= 50) powerUp->type = Powerup::powerupType::laser;
+                        powerUp->position = weak->position;
+                        this->addRigidBody(powerUp);
                     }
                 }
                 this->deleteRigidBody(rb->id);
@@ -142,6 +145,15 @@ void Game::update() {
                             break;
                     }
                     break;
+                case sf::Event::KeyPressed:
+                    switch (event.key.code) {
+                        case sf::Keyboard::Escape:
+                            this->client->disconnect();
+                            this->window->close();
+                            break;
+                        default:
+                            break;
+                    }
                 default:
                     break;
             }
@@ -155,6 +167,8 @@ void Game::update() {
                 if (state.added) {
                     if (typeid(*state.rb).name() == std::string("class Player")) {
                         ((Player *) state.rb)->setHue(((Player *) state.rb)->spriteHue);
+                    } else if (typeid(*state.rb).name() == std::string("class PlayerWeak")) {
+                        ((PlayerWeak *) state.rb)->setHue(((PlayerWeak *) state.rb)->spriteHue);
                     } else if (typeid(*state.rb).name() == std::string("class Powerup")) {
                         ((Powerup *) state.rb)->loadSprite();
                     }
@@ -234,7 +248,7 @@ void Game::addRigidBody(RigidBody *rigidBody) {
         if (typeid(*rigidBody).name() == std::string("class Laserbeam"))
             msg.rb = new Laserbeam(*(Laserbeam *) rigidBody);
         msg.rb->id = rigidBody->id;
-        this->server->pushRbMsg(msg);
+        this->server->pushMsg(msg);
     }
     this->rigidBodies.push_back(rigidBody);
 }
@@ -252,17 +266,7 @@ void Game::deleteRigidBody(int id) {
         Server::msg msg{};
         msg.type = Server::msgType::deleteRb;
         msg.rbId = id;
-        this->server->pushRbMsg(msg);
-    }
-    if (!this->isServer) {
-        RigidBody *rb = rigidBodies[idx];
-        if ((typeid(*rb).name() == std::string("class Player") &&
-             (*(Player *) rb).clientId == this->client->id()) ||
-            (typeid(*rb).name() == std::string("class PlayerWeak") &&
-             (*(PlayerWeak *) rb).clientId == this->client->id())) {
-            this->client->disconnect();
-            this->window->close();
-        }
+        this->server->pushMsg(msg);
     }
     delete this->rigidBodies[idx];
     this->rigidBodies.erase(this->rigidBodies.begin() + idx);
@@ -302,23 +306,40 @@ void Game::physicsUpdate(float timeDelta) {
             }
         }
     }
-
     for (auto rb : this->rigidBodies) {
         rb->physicsStep(timeDelta);
-        if (typeid(*rb).name() == std::string("class Laserbeam") &&
-            ((Laserbeam *) rb)->createdElapsed.getElapsedTime().asMilliseconds() > 400) {
-            rb->deleted = true;
+    }
+    if (this->isServer) {
+        for (auto rb : this->rigidBodies) {
+            if (typeid(*rb).name() == std::string("class Laserbeam") &&
+                ((Laserbeam *) rb)->createdElapsed.getElapsedTime().asMilliseconds() > 400) {
+                rb->deleted = true;
+            }
+            if (typeid(*rb).name() == std::string("class PlayerWeak") &&
+                ((PlayerWeak *) rb)->createdElapsed.getElapsedTime().asSeconds() > 10) {
+                rb->deleted = true;
+                ((PlayerWeak *) rb)->doPUSpawn = false;
+                auto *player = new Player(this->textures);
+                player->position = rb->position;
+                player->clientId = ((PlayerWeak *) rb)->clientId;
+                player->rotation = rb->rotation;
+                player->rotationDir = ((PlayerWeak *) rb)->rotationDir;
+                player->setHue(((PlayerWeak *) rb)->spriteHue);
+                this->addRigidBody(player);
+            }
+            if (Math::vectorScale(rb->position - sf::Vector2f(640, 360)) > 5000) rb->deleted = true;
         }
-        if (this->isServer && Math::vectorScale(rb->position - sf::Vector2f(640, 360)) > 5000) rb->deleted = true;
     }
 }
 
 void Game::processClientInput(Server::clientInput input) {
     Player *player = nullptr;
+    std::string playerClass;
     for (RigidBody *rb : this->rigidBodies) {
         if ((typeid(*rb).name() == std::string("class Player") ||
              typeid(*rb).name() == std::string("class PlayerWeak")) && ((Player *) rb)->clientId == input.clientId) {
             player = (Player *) rb;
+            playerClass = typeid(*rb).name();
             break;
         }
     }
@@ -334,24 +355,26 @@ void Game::processClientInput(Server::clientInput input) {
                     player->rotationDir = this->rotationDir;
                     break;
                 case sf::Mouse::Right:
-                    if (player->hasLaser) {
-                        player->hasLaser = false;
-                        laserbeam = new Laserbeam(this->textures);
-                        laserbeam->position =
-                                player->position + Math::rotateVector(sf::Vector2f(30, 0), player->rotation);
-                        laserbeam->rotation = player->rotation;
-                        laserbeam->clientId = player->clientId;
-                        this->addRigidBody(laserbeam);
-                    } else if (player->ammo > 0) {
-                        player->ammo--;
-                        player->ammoClock.restart();
-                        projectile = new Projectile(this->textures);
-                        projectile->position =
-                                player->position + Math::rotateVector(sf::Vector2f(30, 0), player->rotation);
-                        projectile->rotation = player->rotation;
-                        projectile->velocity = Math::rotateVector(sf::Vector2f(1000, 0), player->rotation);
-                        projectile->clientId = player->clientId;
-                        this->addRigidBody(projectile);
+                    if (playerClass == std::string("class Player")) {
+                        if (player->hasLaser) {
+                            player->hasLaser = false;
+                            laserbeam = new Laserbeam(this->textures);
+                            laserbeam->position =
+                                    player->position + Math::rotateVector(sf::Vector2f(30, 0), player->rotation);
+                            laserbeam->rotation = player->rotation;
+                            laserbeam->clientId = player->clientId;
+                            this->addRigidBody(laserbeam);
+                        } else if (player->ammo > 0) {
+                            player->ammo--;
+                            player->ammoClock.restart();
+                            projectile = new Projectile(this->textures);
+                            projectile->position =
+                                    player->position + Math::rotateVector(sf::Vector2f(30, 0), player->rotation);
+                            projectile->rotation = player->rotation;
+                            projectile->velocity = Math::rotateVector(sf::Vector2f(1000, 0), player->rotation);
+                            projectile->clientId = player->clientId;
+                            this->addRigidBody(projectile);
+                        }
                     }
                     break;
                 default:
@@ -369,5 +392,5 @@ void Game::processClientInput(Server::clientInput input) {
     }
     Server::msg msg{};
     msg.type = Server::msgType::updateRbs;
-    this->server->pushRbMsg(msg);
+    this->server->pushMsg(msg);
 }

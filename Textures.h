@@ -16,6 +16,7 @@ public:
     sf::Texture *laserbeam;
 
     std::unordered_map<int, sf::Texture *> customPlayerTextures;
+    std::unordered_map<int, sf::Texture *> customPlayerWeakTextures;
 
     Textures();
 

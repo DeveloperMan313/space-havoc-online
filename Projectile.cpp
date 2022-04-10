@@ -1,6 +1,6 @@
 #include "Projectile.h"
 
-Projectile::Projectile(Textures *textures) {
+Projectile::Projectile(Textures *textures) : RigidBody() {
     this->type = RigidBody::rbType::circle;
     this->mass = 1;
     this->elasticity = 1.f;

@@ -7,6 +7,9 @@ RigidBody::RigidBody() {
     this->mass = 1.f;
     this->elasticity = 1.f;
     this->hitbox = {20.f, 0.f, 0.f};
+    this->resultantForce = {0, 0};
+    this->deleted = false;
+    this->id = -1;
 }
 
 RigidBody::RigidBody(enum rbType type, sf::Vector2f position, float rotation, float mass, float elasticity,
@@ -19,6 +22,9 @@ RigidBody::RigidBody(enum rbType type, sf::Vector2f position, float rotation, fl
     this->hitbox.radius = radius;
     this->hitbox.width = width;
     this->hitbox.height = height;
+    this->resultantForce = {0, 0};
+    this->deleted = false;
+    this->id = -1;
 
     if (this->type == RigidBody::rbType::rectangle) this->mass = INFINITY;
 }
@@ -130,6 +136,11 @@ void RigidBody::physicsStep(float timeDelta) {
     this->sprite.setPosition(this->position);
     this->sprite.setRotation(this->rotation * 180.f / 3.1415f);
     if (this->type == RigidBody::rbType::rectangle) return;
+    /*std::cout << typeid(*this).name() << ":\n";
+    std::cout << this->velocity.x << ' ' << this->velocity.y << '\n';
+    std::cout << this->resultantForce.x << ' ' << this->resultantForce.y << '\n';
+    std::cout << this->mass << '\n';
+    std::cout << this->position.x << ' ' << this->position.y << '\n';*/
     this->velocity += this->resultantForce / this->mass;
     this->position += this->velocity * timeDelta;
     this->resultantForce = {0, 0};

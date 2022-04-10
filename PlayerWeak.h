@@ -10,11 +10,14 @@ public:
     int clientId;
     float velocityScalar;
     int rotationDir;
+    float spriteHue;
+    bool doPUSpawn;
     sf::Clock LMBelapsed;
     sf::Clock jumpCooldown;
     Textures *textures;
+    sf::Clock createdElapsed;
 
-    PlayerWeak(Textures *textures);
+    explicit PlayerWeak(Textures *textures);
 
     PlayerWeak(const PlayerWeak &rb);
 
@@ -25,4 +28,6 @@ public:
     void jump();
 
     void processCollision(RigidBody *other);
+
+    void setHue(float hue);
 };

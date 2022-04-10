@@ -30,9 +30,9 @@ public:
 
     static bool pointInTriangle(sf::Vector2f point, sf::Vector2f a, sf::Vector2f b, sf::Vector2f c);
 
-    static bool segmentsIntersect(sf::Vector2f &p1, sf::Vector2f &p2, sf::Vector2f &p3, sf::Vector2f &p4);
+    static bool segmentsIntersect(sf::Vector2f p1, sf::Vector2f p2, sf::Vector2f p3, sf::Vector2f p4);
 
-    static bool vectorsEqual(sf::Vector2f &v1, sf::Vector2f &v2, float epsilon = 10e-4);
+    static bool vectorsEqual(sf::Vector2f v1, sf::Vector2f v2, float epsilon = 10e-4);
 
     static sf::Vector2f linesIntersectionPoint(Math::line line1, Math::line line2);
 
@@ -48,5 +48,5 @@ public:
 
     static sf::Color HSLtoRGB(float H, float S, float L);
 
-    static std::tuple<float, float, float> RGBtoHSL(const sf::Color &color);
+    static std::tuple<float, float, float> RGBtoHSL(const sf::Color color);
 };

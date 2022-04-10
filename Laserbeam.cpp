@@ -1,6 +1,6 @@
 #include "Laserbeam.h"
 
-Laserbeam::Laserbeam(Textures *textures) {
+Laserbeam::Laserbeam(Textures *textures) : RigidBody() {
     this->hitbox = {0, 0, 0};
     this->mass = 0;
     this->clientId = -1;

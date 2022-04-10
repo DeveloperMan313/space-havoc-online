@@ -7,6 +7,7 @@ float Math::sign(float x) {
 }
 
 sf::Vector2f Math::normalizeVector(sf::Vector2f vector) {
+    if (Math::vectorsEqual(vector, sf::Vector2f(0, 0))) return {1, 0};
     return vector / std::sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
@@ -48,7 +49,7 @@ bool Math::pointInTriangle(sf::Vector2f point, sf::Vector2f a, sf::Vector2f b, s
     return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 < 0 && s2 < 0 && s3 < 0);
 }
 
-bool Math::segmentsIntersect(sf::Vector2f &p1, sf::Vector2f &p2, sf::Vector2f &p3, sf::Vector2f &p4) {
+bool Math::segmentsIntersect(sf::Vector2f p1, sf::Vector2f p2, sf::Vector2f p3, sf::Vector2f p4) {
     float x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y, x3 = p3.x, y3 = p3.y, x4 = p4.x, y4 = p4.y;
     return Math::sign((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) !=
            Math::sign((x2 - x1) * (y4 - y1) - (y2 - y1) * (x4 - x1))
@@ -56,7 +57,7 @@ bool Math::segmentsIntersect(sf::Vector2f &p1, sf::Vector2f &p2, sf::Vector2f &p
               Math::sign((x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3));
 }
 
-bool Math::vectorsEqual(sf::Vector2f &v1, sf::Vector2f &v2, float epsilon) {
+bool Math::vectorsEqual(sf::Vector2f v1, sf::Vector2f v2, float epsilon) {
     return Math::vectorScale(v1 - v2) < epsilon;
 }
 
@@ -208,7 +209,7 @@ sf::Color Math::HSLtoRGB(float H, float S, float L) {
     return color;
 }
 
-std::tuple<float, float, float> Math::RGBtoHSL(const sf::Color &color) {
+std::tuple<float, float, float> Math::RGBtoHSL(const sf::Color color) {
     float R = (float) color.r / 255.f;
     float G = (float) color.g / 255.f;
     float B = (float) color.b / 255.f;
